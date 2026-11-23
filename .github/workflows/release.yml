@@ -14,11 +14,14 @@ jobs:
   build:
     strategy:
       matrix:
+        # Both macOS builds run on the Intel pool: on 23 Nov 2026 the arm64 pool was short of capacity and dropped
+        # the jobs after 15 minutes in the queue. The arm64 binary is cross-compiled there, so only the Intel one can
+        # check the records.
         include:
           - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
           - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm }
-          - { target: aarch64-apple-darwin, os: macos-15 }
-          - { target: x86_64-apple-darwin, os: macos-15, cross: true }
+          - { target: aarch64-apple-darwin, os: macos-15-intel, cross: true }
+          - { target: x86_64-apple-darwin, os: macos-15-intel }
           - { target: x86_64-pc-windows-msvc, os: windows-2025, exe: .exe }
     runs-on: ${{ matrix.os }}
     defaults:

@@ -805,6 +805,18 @@ tbody .math {
   color: var(--red-text);
 }
 
+.league .tier {
+  margin-left: 0.7em;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
+.league .kept {
+  color: var(--red-text);
+}
+
 .checker {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -907,5 +919,23 @@ tbody .math {
   }
   .foot nav {
     flex-wrap: wrap;
+  }
+}
+
+/* On a phone the league keeps all six columns in view: the tier goes under the name and the cells close up. */
+@media (max-width: 599px) {
+  .league .tier {
+    display: block;
+    margin: 4px 0 0;
+  }
+  .league th,
+  .league td {
+    padding-right: 8px;
+  }
+  .league thead th {
+    letter-spacing: 0.04em;
+  }
+  .league tbody .math {
+    font-size: 15px;
   }
 }

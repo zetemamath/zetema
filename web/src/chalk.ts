@@ -35,13 +35,17 @@ function hash(text: string): number {
   return h >>> 0;
 }
 
+/** The hand font has only ASCII quotes and the hyphen, so typographic quotes, minus signs and dashes are written as those. */
+export const plain = (text: string): string =>
+  text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/[\u2212\u2013]/g, "-");
+
 /** Lays out text as handwriting: every glyph is turned, raised and sized a little differently, the same way each time. */
 export function handwrite(font: HandFont, text: string, x: number, baseline: number, size: number): Written {
   const roll = random(hash(text));
   const k = size / font.unitsPerEm;
   const lines: Polyline[] = [];
   let pen = x;
-  for (const ch of text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"')) {
+  for (const ch of plain(text)) {
     const glyph = font.glyphs[ch] ?? font.glyphs["?"];
     if (!glyph) continue;
     const turn = (roll() - 0.5) * 0.07;

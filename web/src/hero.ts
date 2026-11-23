@@ -1,7 +1,7 @@
 // The top of the page: the latest record written on the board, and the lab's notes beside it.
 
 import handFont from "./hand.json";
-import { Chalk, handwrite, rule, type HandFont, type Polyline } from "./chalk";
+import { Chalk, handwrite, plain, rule, type HandFont, type Polyline } from "./chalk";
 import { check, explain } from "./check";
 import { reduced, wait, type Lab } from "./lab";
 
@@ -26,7 +26,7 @@ const clamp = (lo: number, x: number, hi: number) => Math.max(lo, Math.min(x, hi
 
 export function measure(text: string, size: number): number {
   let w = 0;
-  for (const ch of text.replace(/[\u2018\u2019]/g, "'")) w += (font.glyphs[ch] ?? font.glyphs["?"])?.a ?? 0;
+  for (const ch of plain(text)) w += (font.glyphs[ch] ?? font.glyphs["?"])?.a ?? 0;
   return (w * size) / font.unitsPerEm;
 }
 
@@ -92,8 +92,8 @@ function plan(lab: Lab, metrics: Metrics): Layout {
 
   const eqRight = Math.max(redRight + size * 0.12, wx + line1.width);
   const notesLeft = Math.max(eqRight + size * 0.7, w * 0.62);
-  const notesWidth = Math.min(470, w - notesLeft - x0 * 0.7);
-  const notes = wide && notesWidth >= 300 ? { left: notesLeft, top: Math.max(118, h * 0.16), width: notesWidth, size: clamp(19, size * 0.21, 26) } : null;
+  const notesWidth = Math.min(520, w - notesLeft - Math.max(40, x0 * 0.45));
+  const notes = wide && notesWidth >= 300 ? { left: notesLeft, top: Math.max(118, h * 0.16), width: notesWidth, size: clamp(19, size * 0.21, 24) } : null;
   return { wide, size, x0, chalk: chalkLines, pieces, copyTop: y2 + size * 0.62, notes };
 }
 
@@ -123,7 +123,12 @@ function placePieces(layout: Layout, animate: boolean): Promise<void> {
 // ----- the lab, now: notes written in chalk, wiped and rewritten -----
 
 function pages(lab: Lab): string[][] {
-  const hunting = lab.hunting.slice(0, 3).map((h) => `${h.name}  ${h.table} \u2192 ${h.target}?  ${h.open} ${h.open === 1 ? "pair" : "pairs"} left`);
+  const sets = (t: number, n: number) => (t === 2 ? (n === 1 ? "pair" : "pairs") : n === 1 ? "set" : "sets");
+  const live = (lab.live ?? [])
+    .filter((s) => s.level !== null && s.open !== null)
+    .slice(0, 3)
+    .map((s) => `${s.name}  ${s.table} \u2192 ${s.table - 1}?  ${s.open} ${sets(s.t, s.open!)} left${s.level === s.table - 1 ? "" : ` at ${s.level}`}`);
+  const hunting = live.length ? live : lab.hunting.slice(0, 3).map((h) => `${h.name}  ${h.table} \u2192 ${h.target}?  ${h.open} ${sets(2, h.open)} left`);
   const t = lab.today;
   const adopted = lab.ideas.filter((i) => i.status === "adopted").at(-1);
   const tested = lab.ideas.filter((i) => i !== adopted);
@@ -133,10 +138,10 @@ function pages(lab: Lab): string[][] {
     return [`idea ${i.n} \u00b7 ${i.model}`, i.short, i.status === "adopted" ? `${score} \u2192 adopted \u2713` : `${score} \u2192 ${i.status}`];
   };
   const page = (k: number) => [
-    "searching now",
+    live.length ? "searching now, live" : "searching now",
     ...hunting,
     "",
-    `${t.ideas} ideas from AI models today, ${t.adopted} adopted`,
+    `${t.ideas} AI ideas today, ${t.adopted} adopted`,
     "",
     ...(adopted ? idea(adopted) : []),
     "",
@@ -232,17 +237,31 @@ async function verify(lab: Lab): Promise<void> {
   out.append(links);
 }
 
+let refresh: (lab: Lab) => void = () => {};
+
+/** Hands the board the lab's newest state: the notes use it from their next page on, a phone's list at once. */
+export const refreshHero = (lab: Lab): void => refresh(lab);
+
 export async function startHero(lab: Lab): Promise<void> {
   const metrics = (await fetch("/numerals/metrics.json").then((r) => r.json())) as Metrics;
   const r = lab.record;
   board.querySelector("[data-equation]")!.textContent =
     `${r.name} = ${r.value}: ${r.value} blocks of ${r.k} points cover all ${r.pairs.toLocaleString("en")} pairs among ${r.v} points. The best known had been ${r.previous} since ${r.previousSince}, and no covering can use fewer than ${r.lowerBound}.`;
+  const together = `every ${["two", "three", "four", "five"][r.t - 2] ?? r.t} of them`;
+  board.querySelector("[data-lede]")!.textContent =
+    `${r.v} people, meetings of ${r.k}, and ${together} must share a meeting. The best plan since ${r.previousSince} took ${r.previous} meetings. ` +
+    `A search written by AI found one with ${r.value}${r.value === r.lowerBound ? ", and a proof shows no plan can use fewer." : "."}`;
   board.querySelector("[data-pulse]")!.textContent = `lab running \u00b7 ${lab.today.ideas} ideas today`;
   board.querySelector("[data-verify]")!.addEventListener("click", () => void verify(lab));
   await document.fonts.ready;
 
   let layout = plan(lab, metrics);
   const notes = new Notes(lab, layout.notes);
+  refresh = (fresh) => {
+    notes.update(fresh, layout.notes);
+    board.querySelector("[data-pulse]")!.textContent = `lab running · ${fresh.today.ideas} ideas today`;
+    if (!layout.notes) void notes.show(false);
+  };
   const apply = (l: Layout) => {
     const top = board.querySelector<HTMLElement>(".top")!;
     board.style.setProperty("--x0", `${l.x0}px`);

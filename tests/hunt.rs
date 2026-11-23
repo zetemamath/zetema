@@ -17,6 +17,7 @@ fn a_hunt_writes_checked_certificates() {
         round: 1,
         out: out.clone(),
         near: Some((near.clone(), 9)),
+        status: None,
     };
     let outcomes = Mutex::new(Vec::new());
     hunt(&targets, &plan, &|outcome| {

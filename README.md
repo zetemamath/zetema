@@ -16,6 +16,16 @@ OpenTimestamps proof next to them shows that the file existed by Bitcoin block 9
 Site: [zetema.ai](https://zetema.ai) · X: [@ZetemaMath](https://x.com/ZetemaMath) ·
 [hello@zetema.ai](mailto:hello@zetema.ai)
 
+## Install
+
+Binaries for Linux, macOS and Windows are on the [releases page](https://github.com/zetemamath/zetema/releases).
+The release workflow builds each one from its tag and signs where it came from;
+`gh attestation verify FILE -R zetemamath/zetema` checks that. To build from source instead:
+
+```
+$ cargo install --locked --git https://github.com/zetemamath/zetema
+```
+
 ## Check a record
 
 ```
@@ -62,6 +72,8 @@ lab's notebook on the site.
 - [`src/lab.rs`](src/lab.rs): runs many searches side by side and keeps the nearest misses.
 - [`src/wasm.rs`](src/wasm.rs): the checker's browser interface.
 - [`records/`](records): the lab's records, each with its timestamp proof.
+- [`contracts/`](contracts): the registry, the bounty board and the sponsor contract, with their
+  Foundry tests.
 - [`web/`](web): the site, a blackboard where the lab's state is written in chalk.
 
 ## Search
@@ -117,6 +129,37 @@ The first line gives the format, then v, k and t. Every other line is one block,
 from 1. Layout is free when reading. The digest is taken over the canonical text: points ascending
 within a block, blocks ascending, single spaces, one line feed after every line.
 
+## On chain
+
+Three contracts in [`contracts/`](contracts) are written for Robinhood Chain. Addresses follow at
+deployment.
+
+- `CoveringRegistry` keeps, for each (v, k) with 2 <= k < v <= 255, the (v, k, 2) covering with the
+  fewest blocks submitted so far. It checks every submission in full, pair by pair, and takes it
+  only if it has fewer blocks than the record. The account that submits it is its finder. Each
+  `Recorded` event carries the blocks, so the logs alone hold every record.
+- `BountyBoard` holds token bounties. A pot sits on a target, a (v, k, 2) covering of at most N
+  blocks, where N is at least the lower bound. Anyone can add to a pot; no one can take tokens back
+  out. Once the registry's record for (v, k) meets the target, anyone can call `claim`, which sends
+  the whole pot to the finder of the record at that moment. The lab claims right after every new
+  record.
+- `HuntSponsor` burns tokens to buy hours of the lab's search on an entry.
+
+To submit a covering, from a terminal or from an agent, turn its certificate into the call:
+
+```
+$ cargo run --release -- calldata found.txt
+0x83c60a2f...
+```
+
+and send that call data to the registry from the account that should be paid, for example with
+`cast send REGISTRY CALLDATA`. `--sponsor ADDRESS` names an account to credit for the search.
+`calldata` refuses what the registry would refuse whatever its record: a design that is not
+(v, k, 2) with k < v <= 255, a pair left uncovered, a block given twice. If the covering beats the
+record, the sending account is its finder, and each pot whose target it meets pays that account when
+claimed, unless a better record lands first. Publish a certificate only after its transaction is in: until then, anyone who reads
+it can submit it first.
+
 ## Limits
 
 - The checker marks at most 2^28 t-sets (32 MiB), which covers every t = 2 and t = 3 case up to
@@ -127,7 +170,11 @@ within a block, blocks ascending, single spaces, one line feed after every line.
 
 ```
 $ cargo test
+$ cd contracts && forge test
 ```
+
+The fork tests in [`contracts/test/fork`](contracts/test/fork) run only when `RH_RPC_URL`,
+`ZETEMA_FORK_TOKEN_GRAD` and `ZETEMA_FORK_TOKEN_CURVE` are set; otherwise they skip themselves.
 
 ## Credits
 

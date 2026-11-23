@@ -115,7 +115,7 @@ function notebook(lab: Lab): void {
         el(
           "article",
           { className: "adopted" },
-          el("p", { className: "label", textContent: `adopted \u00b7 idea ${a.n} \u00b7 Claude ${a.model} \u00b7 ${a.utc.replace(" ", " at ")} UTC` }),
+          el("p", { className: "label", textContent: `adopted \u00b7 idea ${a.n} \u00b7 ${a.model} \u00b7 ${a.utc.replace(" ", " at ")} UTC` }),
           el("blockquote", { textContent: a.idea }),
           el(
             "pre",
@@ -125,6 +125,20 @@ function notebook(lab: Lab): void {
           el("p", { className: "score" }, "score over four sets of seeds ", el("span", { className: "math", textContent: `${a.before.toFixed(1)} \u2192 ${a.after.toFixed(1)}` }), " (higher is better)"),
         ),
       ),
+  );
+  $("[data-league]").replaceChildren(
+    ...(lab.league ?? []).map((r) =>
+      el(
+        "tr",
+        {},
+        el("td", {}, r.model, el("span", { className: "tier", textContent: r.tier })),
+        el("td", { className: "math", textContent: String(r.turns) }),
+        el("td", { className: "math", textContent: String(r.ran) }),
+        el("td", { className: r.adopted ? "math kept" : "math", textContent: String(r.adopted) }),
+        el("td", { className: "math", textContent: r.best === null ? "–" : signed(r.best) }),
+        el("td", { className: "math", textContent: `$${r.spentUsd.toFixed(2)}` }),
+      ),
+    ),
   );
   $("[data-log]").replaceChildren(
     ...lab.ideas

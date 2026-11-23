@@ -1,0 +1,15 @@
+[profile.default]
+solc = "0.8.28"
+evm_version = "cancun"
+optimizer = true
+deny = "warnings"
+# With dynamic linking, `new` in a test becomes a deployCode cheatcode, and a creation expected to revert ends the
+# whole test while it still passes; tests deploy with plain CREATE instead.
+dynamic_test_linking = false
+
+[lint]
+# The registry rejects a design at its first fault, so it reverts inside its checking loops on purpose.
+exclude_lints = ["require-revert-in-loop"]
+
+[fuzz]
+runs = 1000

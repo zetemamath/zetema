@@ -11,9 +11,10 @@ use crate::design::Covering;
 use crate::search::{Search, Settings};
 use std::collections::VecDeque;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
-use std::{fs, thread};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Mutex, MutexGuard};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::{fs, io, thread};
 
 /// One entry to attack: find a (v, k, t) covering with fewer than `below` blocks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -41,6 +42,60 @@ pub struct Plan {
     pub out: PathBuf,
     /// Where the nearest misses are written, and how many open sets still count as near.
     pub near: Option<(PathBuf, usize)>,
+    /// A file rewritten about once a second with how far every running search has come.
+    pub status: Option<PathBuf>,
+}
+
+/// How far a running search has come, as the status file shows it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Live {
+    target: Target,
+    best: Option<usize>,
+    lowest: Option<(usize, usize)>,
+    steps: u64,
+    seconds: f64,
+}
+
+fn number(value: Option<usize>) -> String {
+    value.map_or("null".to_string(), |value| value.to_string())
+}
+
+fn lock<T>(mutex: &Mutex<T>) -> MutexGuard<'_, T> {
+    mutex
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner())
+}
+
+/// The status file's text: when it was written (Unix seconds) and every running search, with the
+/// level it is working on and the sets still open there.
+fn status_json(searches: &[Option<Live>], unix: u64) -> String {
+    let rows: Vec<String> = searches
+        .iter()
+        .flatten()
+        .map(|live| {
+            let Target { v, k, t, below } = live.target;
+            format!(
+                "{{\"v\":{v},\"k\":{k},\"t\":{t},\"below\":{below},\"best\":{},\"level\":{},\"open\":{},\
+                 \"steps\":{},\"seconds\":{:.0}}}",
+                number(live.best),
+                number(live.lowest.map(|low| low.0)),
+                number(live.lowest.map(|low| low.1)),
+                live.steps,
+                live.seconds,
+            )
+        })
+        .collect();
+    format!("{{\"updated\":{unix},\"searches\":[{}]}}", rows.join(","))
+}
+
+/// Replaces the status file in one step (a temporary file, then a rename), so a reader never sees half of it.
+fn write_status(path: &Path, searches: &[Option<Live>]) -> io::Result<()> {
+    let unix = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |time| time.as_secs());
+    let temporary = path.with_extension("tmp");
+    fs::write(&temporary, status_json(searches, unix))?;
+    fs::rename(&temporary, path)
 }
 
 /// What one search came to.
@@ -70,8 +125,6 @@ pub struct Outcome {
 impl Outcome {
     /// The outcome as one line of JSON.
     pub fn json(&self) -> String {
-        let number =
-            |value: Option<usize>| value.map_or("null".to_string(), |value| value.to_string());
         let (digest, file) = match &self.record {
             Some((digest, file)) => (format!("\"{digest}\""), format!("\"{}\"", file.display())),
             None => ("null".to_string(), "null".to_string()),
@@ -136,24 +189,43 @@ pub fn hunt(
     report: &(dyn Fn(&Outcome) + Sync),
 ) -> Result<(), String> {
     fs::create_dir_all(&plan.out).map_err(|error| format!("{}: {error}", plan.out.display()))?;
+    if let Some(path) = &plan.status {
+        write_status(path, &[]).map_err(|error| format!("{}: {error}", path.display()))?;
+    }
+    let workers = plan.workers.max(1);
     let queue = Mutex::new(targets.iter().copied().collect::<VecDeque<Target>>());
     let failure = Mutex::new(None);
+    let live = Mutex::new(vec![None; workers]);
+    let running = AtomicUsize::new(workers);
     thread::scope(|scope| {
-        for _ in 0..plan.workers.max(1) {
-            scope.spawn(|| loop {
-                let next = queue
-                    .lock()
-                    .unwrap_or_else(|poisoned| poisoned.into_inner())
-                    .pop_front();
-                let Some(target) = next else { break };
-                match attack(target, plan) {
-                    Ok(outcome) => report(&outcome),
-                    Err(error) => {
-                        *failure
-                            .lock()
-                            .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(error)
+        for slot in 0..workers {
+            let (queue, failure, live, running) = (&queue, &failure, &live, &running);
+            scope.spawn(move || {
+                let show = |now: Option<Live>| lock(live)[slot] = now;
+                loop {
+                    let next = lock(queue).pop_front();
+                    let Some(target) = next else { break };
+                    match attack(target, plan, &show) {
+                        Ok(outcome) => report(&outcome),
+                        Err(error) => *lock(failure) = Some(error),
                     }
+                    show(None);
                 }
+                running.fetch_sub(1, Ordering::Release);
+            });
+        }
+        if let Some(path) = &plan.status {
+            let (live, running) = (&live, &running);
+            scope.spawn(move || loop {
+                let finished = running.load(Ordering::Acquire) == 0;
+                let searches = lock(live).clone();
+                if let Err(error) = write_status(path, &searches) {
+                    eprintln!("{}: {error}", path.display());
+                }
+                if finished {
+                    break;
+                }
+                thread::sleep(Duration::from_secs(1));
             });
         }
     });
@@ -163,15 +235,28 @@ pub fn hunt(
     failure.map_or(Ok(()), Err)
 }
 
-/// One search, from its seed to its outcome.
-fn attack(target: Target, plan: &Plan) -> Result<Outcome, String> {
+/// One search, from its seed to its outcome. `show` hears how far it has come about four times a second.
+fn attack(target: Target, plan: &Plan, show: &dyn Fn(Option<Live>)) -> Result<Outcome, String> {
     let Target { v, k, t, below } = target;
     let seed = seed_for(target, plan.round);
     let mut search = Search::new(v, k, t, below + 2, seed, Settings::for_blocks(k, t))
         .map_err(|error| format!("C({v},{k},{t}): {error}"))?;
     let floor = schoenheim(v as u64, k as u64, t as u64) as usize;
     let clock = Instant::now();
-    while !search.run(2_000, floor) && clock.elapsed() < plan.limit {}
+    let mut shown = clock;
+    while !search.run(2_000, floor) && clock.elapsed() < plan.limit {
+        if shown.elapsed() >= Duration::from_millis(250) {
+            let progress = search.progress();
+            show(Some(Live {
+                target,
+                best: progress.best,
+                lowest: progress.lowest,
+                steps: progress.steps,
+                seconds: clock.elapsed().as_secs_f64(),
+            }));
+            shown = Instant::now();
+        }
+    }
     let progress = search.progress();
     let record = match search.best().filter(|best| best.blocks.len() < below) {
         Some(best) => Some(keep(best, &plan.out)?),
@@ -283,6 +368,49 @@ mod tests {
         assert_eq!(seed_for(fano, 1), seed_for(fano, 1));
         assert_ne!(seed_for(fano, 1), seed_for(fano, 2));
         assert_ne!(seed_for(fano, 1), seed_for(plane, 1));
+    }
+
+    #[test]
+    fn the_status_lists_running_searches_only() {
+        let live = Live {
+            target: Target {
+                v: 43,
+                k: 9,
+                t: 2,
+                below: 30,
+            },
+            best: Some(30),
+            lowest: Some((29, 1)),
+            steps: 1200,
+            seconds: 42.4,
+        };
+        assert_eq!(
+            status_json(&[None, Some(live)], 1_700_000_000),
+            "{\"updated\":1700000000,\"searches\":[{\"v\":43,\"k\":9,\"t\":2,\"below\":30,\"best\":30,\"level\":29,\
+             \"open\":1,\"steps\":1200,\"seconds\":42}]}"
+        );
+        assert_eq!(
+            status_json(&[None, None], 5),
+            "{\"updated\":5,\"searches\":[]}"
+        );
+    }
+
+    #[test]
+    fn a_finished_hunt_leaves_an_empty_status() {
+        let dir = std::env::temp_dir().join(format!("zetema-status-{}", std::process::id()));
+        let plan = Plan {
+            workers: 2,
+            limit: Duration::from_millis(300),
+            round: 1,
+            out: dir.join("out"),
+            near: None,
+            status: Some(dir.join("status.json")),
+        };
+        let targets = parse_targets("7 3 2 8\n13 4 2 14\n").unwrap();
+        hunt(&targets, &plan, &|_| {}).unwrap();
+        let text = fs::read_to_string(dir.join("status.json")).unwrap();
+        assert!(text.ends_with("\"searches\":[]}"), "{text}");
+        fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

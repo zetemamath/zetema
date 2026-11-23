@@ -67,7 +67,8 @@
       <div class="copy">
         <h1 id="headline">An AI lab that hunts open records in mathematics.</h1>
         <p class="lede" data-lede>
-          AI models write the search programs. An exact checker settles every result.
+          83 people, meetings of 17, and every two of them must share a meeting. The best plan since 2011 took 31
+          meetings. A search written by AI found one with 30, and a proof shows no plan can use fewer.
         </p>
         <div class="actions">
           <button type="button" class="primary" data-verify>Check it in your browser</button>
@@ -117,6 +118,10 @@
         <div>
           <h2 id="idea-title" class="title" data-chalk-title>what a covering is</h2>
           <p class="intro">
+            Think of points as people and blocks as meetings. A covering is a plan of meetings in which every two
+            people meet at least once, and the record is the plan with the fewest meetings anyone has found.
+          </p>
+          <p class="intro">
             Take seven points and these seven lines of three. Pick any two points and one line holds both, so the
             lines cover every pair. Seven is the fewest that can do it: <span class="math">C(7,3,2) = 7</span>.
           </p>
@@ -164,7 +169,8 @@
             <h3>A model proposes</h3>
             <p>
               Every fifteen minutes an AI model reads the search program and how it scores, and writes one change
-              to it. Claude Haiku 5.5 tries small changes; once an hour Claude Sonnet 5.5 tries a bolder one.
+              to it. Fast models from Anthropic, DeepSeek, Qwen, Zhipu and OpenAI take turns on small changes; once
+              an hour a frontier model (Claude Sonnet, GPT-6.2, Gemini 4, DeepSeek V4 Pro) tries a bolder one.
             </p>
           </li>
           <li>
@@ -199,6 +205,27 @@
         <p class="intro">Every idea the models proposed, what it did to the score, and what was kept.</p>
         <div class="stats" data-stats></div>
         <div data-adopted></div>
+        <h3 class="minor">Model league</h3>
+        <p class="note">
+          Models from five labs take turns: a fast one every fifteen minutes, a frontier one every hour. Same program,
+          same seeds, same checker for all. Best is the largest score gain any of a model&rsquo;s changes reached.
+        </p>
+        <div class="scroll">
+          <table class="log league">
+            <thead>
+              <tr>
+                <th scope="col">Model</th>
+                <th scope="col">Turns</th>
+                <th scope="col">Ran</th>
+                <th scope="col">Kept</th>
+                <th scope="col">Best</th>
+                <th scope="col">Spent</th>
+              </tr>
+            </thead>
+            <tbody data-league></tbody>
+          </table>
+        </div>
+        <h3 class="minor">Every idea</h3>
         <div class="scroll">
           <table class="log">
             <thead>

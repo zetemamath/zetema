@@ -37,13 +37,27 @@ export interface Adopted {
   diff: string[];
 }
 
+/** One model's turns in the loop: answers given, changes that built and ran, changes kept, best score gain. */
+export interface LeagueRow {
+  model: string;
+  tier: "fast" | "frontier";
+  turns: number;
+  ran: number;
+  adopted: number;
+  best: number | null;
+  spentUsd: number;
+}
+
 export interface Lab {
   updated: string;
   record: LabRecord;
   records: LabRecord[];
   hunting: { name: string; table: number; target: number; open: number }[];
+  /** Searches running right now: the entry, its table value, the level being tried and the sets still open there. */
+  live?: { name: string; t: number; table: number; best: number | null; level: number | null; open: number | null; seconds: number }[];
   ideas: Idea[];
   adopted: Adopted[];
+  league?: LeagueRow[];
   today: { ideas: number; adopted: number; spentUsd: number };
   total: { ideas: number; adopted: number; spentUsd: number; generation: number };
 }

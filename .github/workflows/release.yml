@@ -1,0 +1,97 @@
+name: release
+
+# A tag vX.Y.Z builds the command line tool for five platforms and the checker's WebAssembly module, then publishes
+# them with the lab's records, their SHA-256 digests and a signed build provenance for every file. The actions are
+# pinned to commits because this workflow can write releases.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04-arm }
+          - { target: aarch64-apple-darwin, os: macos-15 }
+          - { target: x86_64-apple-darwin, os: macos-15, cross: true }
+          - { target: x86_64-pc-windows-msvc, os: windows-2025, exe: .exe }
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      TARGET: ${{ matrix.target }}
+      BIN: target/${{ matrix.target }}/release/zetema${{ matrix.exe }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --locked --bin zetema --target "$TARGET"
+      - name: Check the records with the binary just built
+        if: ${{ !matrix.cross }}
+        run: '"$BIN" check records/*.txt'
+      - name: Package
+        run: |
+          name="zetema-${GITHUB_REF_NAME#v}-$TARGET"
+          mkdir -p "$name" out
+          cp README.md LICENSE-MIT LICENSE-APACHE "$BIN" "$name"
+          if [ "$RUNNER_OS" = Windows ]; then 7z a -bd "out/$name.zip" "$name"; else tar -czf "out/$name.tar.gz" "$name"; fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.target }}
+          path: out/*
+          if-no-files-found: error
+
+  wasm:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@39008827e6b4319a349e9a42dfc90579dd25f1ca # stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: cargo build --lib --release --locked --target wasm32-unknown-unknown
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: wasm
+          path: target/wasm32-unknown-unknown/release/zetema.wasm
+          if-no-files-found: error
+
+  publish:
+    needs: [build, wasm]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Add the records and the digests
+        run: |
+          cp records/* dist/
+          cd dist && sha256sum -- * > SHA256SUMS
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/*
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#v}"
+          awk -v v="$version" '/^## / { if (on) exit; on = ($2 == v); next } on' CHANGELOG.md > notes.md
+          test -s notes.md || { echo "CHANGELOG.md has no section for $version" >&2; exit 1; }
+          cat >> notes.md <<EOF
+
+          Every file below was built from this tag by the release workflow. \`SHA256SUMS\` lists their digests, and \`gh attestation verify FILE -R $GITHUB_REPOSITORY\` checks the signed provenance of a file.
+          EOF
+          gh release create "$TAG" dist/* --title "zetema $version" --notes-file notes.md --verify-tag

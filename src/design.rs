@@ -117,15 +117,20 @@ impl Covering {
         Ok(Self { v, k, t, blocks })
     }
 
-    /// The canonical text: points ascending inside each block, blocks ascending, one line feed per line.
-    pub fn canonical(&self) -> String {
+    /// The blocks in canonical order: points ascending inside each block, blocks ascending.
+    pub fn sorted_blocks(&self) -> Vec<Vec<u8>> {
         let mut blocks = self.blocks.clone();
         for block in &mut blocks {
             block.sort_unstable();
         }
         blocks.sort_unstable();
+        blocks
+    }
+
+    /// The canonical text: points ascending inside each block, blocks ascending, one line feed per line.
+    pub fn canonical(&self) -> String {
         let mut out = format!("{MAGIC} covering {} {} {}\n", self.v, self.k, self.t);
-        for block in &blocks {
+        for block in &self.sorted_blocks() {
             let points: Vec<String> = block
                 .iter()
                 .map(|&p| (usize::from(p) + 1).to_string())

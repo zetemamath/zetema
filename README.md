@@ -9,8 +9,9 @@ check in a terminal or in a browser.
 **Record 001: C(83,17,2) = 30.** Thirty blocks of 17 points cover all 3,403 pairs among 83
 points. The best covering known before had 31 blocks and dated from 2011. No covering of these
 sizes can have fewer than 30 blocks (the Schönheim bound), so the value is now exact and the entry
-is closed. The blocks are in [`records/covering-83-17-2.txt`](records/covering-83-17-2.txt), with an
-OpenTimestamps proof of the date next to them.
+is closed. The blocks are in [`records/covering-83-17-2.txt`](records/covering-83-17-2.txt). The
+OpenTimestamps proof next to them shows that the file existed by Bitcoin block 977177 (23 Nov 2026,
+09:13 UTC).
 
 Site: [zetema.ai](https://zetema.ai) · X: [@ZetemaMath](https://x.com/ZetemaMath) ·
 [hello@zetema.ai](mailto:hello@zetema.ai)
@@ -25,7 +26,8 @@ $ ots verify records/covering-83-17-2.txt.ots
 
 The exit code is 0 only when every file given is a real covering; a file that is not one is
 answered with a set of points its blocks miss. The same checker runs in the browser on
-[zetema.ai](https://zetema.ai), on any certificate you paste.
+[zetema.ai](https://zetema.ai), on any certificate you paste. `ots verify` asks a local Bitcoin node;
+without one, [opentimestamps.org](https://opentimestamps.org) checks the same two files in a browser.
 
 ## What a covering design is
 

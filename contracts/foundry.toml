@@ -1,0 +1,8 @@
+[profile.default]
+solc = "0.8.28"
+evm_version = "cancun"
+optimizer = true
+deny = "warnings"
+
+[fuzz]
+runs = 1000

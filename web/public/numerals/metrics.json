@@ -1,0 +1,79 @@
+{
+ "=": {
+  "file": "numerals/eq.webp",
+  "w": 368,
+  "h": 315,
+  "dy": 172,
+  "digitHeight": 624
+ },
+ "0": {
+  "file": "numerals/0.webp",
+  "w": 424,
+  "h": 656,
+  "dy": -12,
+  "digitHeight": 624
+ },
+ "1": {
+  "file": "numerals/1.webp",
+  "w": 238,
+  "h": 636,
+  "dy": -6,
+  "digitHeight": 624
+ },
+ "2": {
+  "file": "numerals/2.webp",
+  "w": 396,
+  "h": 640,
+  "dy": -10,
+  "digitHeight": 624
+ },
+ "3": {
+  "file": "numerals/3.webp",
+  "w": 412,
+  "h": 650,
+  "dy": -6,
+  "digitHeight": 624
+ },
+ "4": {
+  "file": "numerals/4.webp",
+  "w": 436,
+  "h": 637,
+  "dy": -6,
+  "digitHeight": 624
+ },
+ "5": {
+  "file": "numerals/5.webp",
+  "w": 441,
+  "h": 655,
+  "dy": -3,
+  "digitHeight": 645
+ },
+ "6": {
+  "file": "numerals/6.webp",
+  "w": 442,
+  "h": 660,
+  "dy": -6,
+  "digitHeight": 645
+ },
+ "7": {
+  "file": "numerals/7.webp",
+  "w": 403,
+  "h": 646,
+  "dy": -4,
+  "digitHeight": 645
+ },
+ "8": {
+  "file": "numerals/8.webp",
+  "w": 436,
+  "h": 666,
+  "dy": -12,
+  "digitHeight": 645
+ },
+ "9": {
+  "file": "numerals/9.webp",
+  "w": 430,
+  "h": 655,
+  "dy": -13,
+  "digitHeight": 645
+ }
+}

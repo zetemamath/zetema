@@ -1,0 +1,24 @@
+[package]
+name = "zetema"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.82"
+description = "Search for small covering designs and check them exactly."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/zetemamath/zetema"
+readme = "README.md"
+keywords = ["covering-design", "combinatorics", "design-theory", "verification", "wasm"]
+categories = ["mathematics", "science", "command-line-utilities"]
+publish = false
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+sha2 = { version = "0.10", default-features = false }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

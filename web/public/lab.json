@@ -1,0 +1,220 @@
+{
+ "updated": "2026-11-23T09:18:44Z",
+ "record": {
+  "name": "C(83,17,2)",
+  "v": 83,
+  "k": 17,
+  "t": 2,
+  "value": 30,
+  "previous": 31,
+  "previousSince": 2011,
+  "lowerBound": 30,
+  "pairs": 3403,
+  "closed": "2026-11-23",
+  "stamped": "2026-11-23T08:18:00Z",
+  "sha256": "a460d59ff9e4a87ec447280aa538d9b73880b453c691922487c775046ac6d7c9",
+  "certificate": "records/covering-83-17-2.txt",
+  "proof": "records/covering-83-17-2.txt.ots"
+ },
+ "records": [
+  {
+   "name": "C(83,17,2)",
+   "v": 83,
+   "k": 17,
+   "t": 2,
+   "value": 30,
+   "previous": 31,
+   "previousSince": 2011,
+   "lowerBound": 30,
+   "pairs": 3403,
+   "closed": "2026-11-23",
+   "stamped": "2026-11-23T08:18:00Z",
+   "sha256": "a460d59ff9e4a87ec447280aa538d9b73880b453c691922487c775046ac6d7c9",
+   "certificate": "records/covering-83-17-2.txt",
+   "proof": "records/covering-83-17-2.txt.ots"
+  }
+ ],
+ "hunting": [
+  {
+   "name": "C(43,9,2)",
+   "table": 30,
+   "target": 29,
+   "open": 1
+  },
+  {
+   "name": "C(42,9,2)",
+   "table": 29,
+   "target": 28,
+   "open": 1
+  },
+  {
+   "name": "C(43,10,2)",
+   "table": 26,
+   "target": 25,
+   "open": 1
+  },
+  {
+   "name": "C(30,7,2)",
+   "table": 25,
+   "target": 24,
+   "open": 1
+  },
+  {
+   "name": "C(46,11,2)",
+   "table": 23,
+   "target": 22,
+   "open": 1
+  },
+  {
+   "name": "C(27,8,2)",
+   "table": 17,
+   "target": 16,
+   "open": 1
+  },
+  {
+   "name": "C(41,12,2)",
+   "table": 17,
+   "target": 16,
+   "open": 1
+  },
+  {
+   "name": "C(37,7,2)",
+   "table": 35,
+   "target": 34,
+   "open": 2
+  }
+ ],
+ "ideas": [
+  {
+   "n": 1,
+   "model": "Haiku 5.5",
+   "short": "keep a swap blocked for five steps, not three",
+   "status": "not better",
+   "delta": -40.4978,
+   "utc": "2026-11-23 06:11"
+  },
+  {
+   "n": 2,
+   "model": "Sonnet 5.5",
+   "short": "keep the learned weights on a retry",
+   "status": "not better",
+   "delta": -18.3972,
+   "utc": "2026-11-23 06:18"
+  },
+  {
+   "n": 3,
+   "model": "Haiku 5.5",
+   "short": "halve the weights on a retry",
+   "status": "not better",
+   "delta": -3.3264,
+   "utc": "2026-11-23 06:47"
+  },
+  {
+   "n": 4,
+   "model": "Haiku 5.5",
+   "short": "break ties fairly when dropping a block",
+   "status": "not better",
+   "delta": -6.8511,
+   "utc": "2026-11-23 07:02"
+  },
+  {
+   "n": 5,
+   "model": "Haiku 5.5",
+   "short": "weigh what each block covers alone",
+   "status": "not better",
+   "delta": -0.4657,
+   "utc": "2026-11-23 07:15"
+  },
+  {
+   "n": 6,
+   "model": "Haiku 5.5",
+   "short": "take the best swap anyway, 3 times in 100",
+   "status": "adopted",
+   "delta": 12.6498,
+   "utc": "2026-11-23 07:36"
+  },
+  {
+   "n": 7,
+   "model": "Haiku 5.5",
+   "short": "reset the weights after every covering",
+   "status": "not better",
+   "delta": -0.8987,
+   "utc": "2026-11-23 07:46"
+  },
+  {
+   "n": 8,
+   "model": "Sonnet 5.5",
+   "short": "score swaps from cached losses",
+   "status": "not better",
+   "delta": 1.6213,
+   "utc": "2026-11-23 08:00"
+  },
+  {
+   "n": 9,
+   "model": "Haiku 5.5",
+   "short": "repair the heavier of two open pairs",
+   "status": "not better",
+   "delta": -0.6019,
+   "utc": "2026-11-23 08:17"
+  },
+  {
+   "n": 10,
+   "model": "Haiku 5.5",
+   "short": "let a strong move break the tabu",
+   "status": "not better",
+   "delta": -1.0631,
+   "utc": "2026-11-23 08:30"
+  },
+  {
+   "n": 11,
+   "model": "Haiku 5.5",
+   "short": "kick with the best of eight swaps",
+   "status": "not better",
+   "delta": 1.209,
+   "utc": "2026-11-23 08:45"
+  },
+  {
+   "n": 12,
+   "model": "Sonnet 5.5",
+   "short": "restart from the nearest miss now and then",
+   "status": "not better",
+   "delta": 0.0014,
+   "utc": "2026-11-23 09:01"
+  }
+ ],
+ "adopted": [
+  {
+   "n": 6,
+   "model": "Haiku 5.5",
+   "idea": "Occasionally accept a worsening swap instead of always raising weights when no swap helps, so the search can escape plateaus that weight growth alone does not leave.",
+   "short": "take the best swap anyway, 3 times in 100",
+   "utc": "2026-11-23 07:36",
+   "before": -45.5,
+   "after": -16.9,
+   "diff": [
+    "@@ -546,5 +546,9 @@",
+    "             return;",
+    "         };",
+    "-        if best < 0 || most + 1 < t || (best == 0 && self.rng.below(100) < self.settings.flat) {",
+    "+        if best < 0",
+    "+            || most + 1 < t",
+    "+            || (best == 0 && self.rng.below(100) < self.settings.flat)",
+    "+            || self.rng.below(100) < 3",
+    "+        {",
+    "             self.swap(block, out, into);",
+    "         } else {"
+   ]
+  }
+ ],
+ "today": {
+  "ideas": 12,
+  "adopted": 1,
+  "spentUsd": 0.1665
+ },
+ "total": {
+  "ideas": 12,
+  "adopted": 1,
+  "spentUsd": 0.1665,
+  "generation": 1
+ }
+}

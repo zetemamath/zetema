@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>zetema · an AI lab for open records in mathematics</title>
+    <meta
+      name="description"
+      content="AI models write the search programs, an exact checker settles every result, and each record ships as a certificate anyone can check in a browser."
+    />
+    <meta name="theme-color" content="#2e3235" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/concrete.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/concrete-bold-italic.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/typewriter.woff2" as="font" type="font/woff2" crossorigin />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #2e3235;
+        color: #efede6;
+      }
+      .board.opening .copy,
+      .board.opening .now {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="board opening" aria-labelledby="headline">
+      <canvas class="chalk" aria-hidden="true"></canvas>
+      <div class="pieces" aria-hidden="true"></div>
+
+      <header class="top">
+        <a class="lockup" href="/" aria-label="zetema home">
+          <img src="/zeta.svg" alt="" width="22" height="36" />
+          <span>zetema</span>
+        </a>
+        <nav aria-label="Main">
+          <a href="#records">Records</a>
+          <a href="#lab">The lab</a>
+          <a href="#verify">Verify</a>
+          <a href="https://github.com/zetemamath/zetema" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://x.com/ZetemaMath" target="_blank" rel="noopener">X</a>
+        </nav>
+        <p class="pulse"><span class="dot" aria-hidden="true"></span><span data-pulse>lab running</span></p>
+      </header>
+
+      <p class="sr-only" data-equation></p>
+
+      <div class="copy">
+        <h1 id="headline">An AI lab that hunts open records in mathematics.</h1>
+        <p class="lede" data-lede>
+          AI models write the search programs. An exact checker settles every result.
+        </p>
+        <div class="actions">
+          <button type="button" class="primary" data-verify>Check it in your browser</button>
+          <a class="secondary" href="#lab">Watch the lab</a>
+        </div>
+        <div class="verdict" data-verdict hidden aria-live="polite"></div>
+      </div>
+
+      <aside class="now" aria-labelledby="now-title">
+        <h2 id="now-title">The lab, now</h2>
+        <ul data-now></ul>
+      </aside>
+    </section>
+
+    <main class="page">
+      <section id="records" class="sheet" aria-labelledby="records-title">
+        <h2 id="records-title" class="title" data-chalk-title>records</h2>
+        <p class="intro">
+          Every record here is a list of blocks you can check yourself. When a covering reaches the proven lower
+          bound, the value is exact and the entry is closed for good.
+        </p>
+        <div class="scroll">
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th scope="col">Entry</th>
+                <th scope="col">Best known before</th>
+                <th scope="col">zetema</th>
+                <th scope="col">Lower bound</th>
+                <th scope="col">Status</th>
+                <th scope="col">Closed</th>
+                <th scope="col">Proof</th>
+              </tr>
+            </thead>
+            <tbody data-ledger></tbody>
+          </table>
+        </div>
+        <h3 class="minor">Closest to falling</h3>
+        <p class="note">
+          For each of these the lab holds a list of blocks one short of the best known that misses only the pairs
+          shown. Closing the gap is a new record.
+        </p>
+        <ul class="near" data-near></ul>
+      </section>
+
+      <section id="idea" class="sheet split" aria-labelledby="idea-title">
+        <div>
+          <h2 id="idea-title" class="title" data-chalk-title>what a covering is</h2>
+          <p class="intro">
+            Take seven points and these seven lines of three. Pick any two points and one line holds both, so the
+            lines cover every pair. Seven is the fewest that can do it: <span class="math">C(7,3,2) = 7</span>.
+          </p>
+          <p class="intro">
+            For most sizes nobody knows the fewest. Tables list the best coverings found so far, some unbeaten for
+            decades. A smaller covering is a new record, and one that meets the proven lower bound settles the
+            entry for good. The lab&rsquo;s first record, <span class="math">C(83,17,2) = 30</span>, did both.
+          </p>
+          <p class="fano-caption" data-fano-caption aria-live="polite">Tap two points.</p>
+        </div>
+        <svg class="fano" data-fano viewBox="0 0 400 360" role="img" aria-label="The Fano plane: seven points and seven lines of three">
+          <defs>
+            <filter id="chalky" x="-5%" y="-5%" width="110%" height="110%">
+              <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="7" result="noise" />
+              <feColorMatrix in="noise" type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 -2.4 2.1" result="grain" />
+              <feComposite in="SourceGraphic" in2="grain" operator="in" />
+            </filter>
+          </defs>
+          <g class="fano-lines" filter="url(#chalky)">
+            <line data-block="1 4 5" x1="200" y1="40" x2="40" y2="317" />
+            <line data-block="1 6 7" x1="200" y1="40" x2="360" y2="317" />
+            <line data-block="3 4 7" x1="40" y1="317" x2="360" y2="317" />
+            <line data-block="1 2 3" x1="200" y1="40" x2="200" y2="317" />
+            <line data-block="2 4 6" x1="40" y1="317" x2="280" y2="178.6" />
+            <line data-block="2 5 7" x1="360" y1="317" x2="120" y2="178.6" />
+            <circle data-block="3 5 6" cx="200" cy="224.7" r="92.3" />
+          </g>
+          <g class="fano-points">
+            <g data-point="1" tabindex="0"><circle cx="200" cy="40" r="11" /><text x="222" y="36">1</text></g>
+            <g data-point="2" tabindex="0"><circle cx="200" cy="224.7" r="11" /><text x="214" y="214">2</text></g>
+            <g data-point="3" tabindex="0"><circle cx="200" cy="317" r="11" /><text x="193" y="350">3</text></g>
+            <g data-point="4" tabindex="0"><circle cx="40" cy="317" r="11" /><text x="12" y="340">4</text></g>
+            <g data-point="5" tabindex="0"><circle cx="120" cy="178.6" r="11" /><text x="88" y="172">5</text></g>
+            <g data-point="6" tabindex="0"><circle cx="280" cy="178.6" r="11" /><text x="298" y="172">6</text></g>
+            <g data-point="7" tabindex="0"><circle cx="360" cy="317" r="11" /><text x="376" y="340">7</text></g>
+          </g>
+        </svg>
+      </section>
+
+      <section id="how" class="sheet" aria-labelledby="how-title">
+        <h2 id="how-title" class="title" data-chalk-title>how the lab works</h2>
+        <ol class="steps">
+          <li>
+            <span class="math step">1</span>
+            <h3>A model proposes</h3>
+            <p>
+              Every fifteen minutes an AI model reads the search program and how it scores, and writes one change
+              to it. Claude Haiku 5.5 tries small changes; once an hour Claude Sonnet 5.5 tries a bolder one.
+            </p>
+          </li>
+          <li>
+            <span class="math step">2</span>
+            <h3>A sealed box runs it</h3>
+            <p>
+              The changed program is compiled and run in a container with no network, on seventeen hard entries
+              with fixed seeds, a minute each.
+            </p>
+          </li>
+          <li>
+            <span class="math step">3</span>
+            <h3>The checker decides</h3>
+            <p>
+              Only coverings the exact checker verifies count. A change stays when it clearly beats the current
+              program on four sets of seeds. Everything else is thrown away.
+            </p>
+          </li>
+          <li>
+            <span class="math step">4</span>
+            <h3>The hunt goes on</h3>
+            <p>
+              The program that won runs on the lab&rsquo;s server day and night against open entries. A covering
+              that beats the table is checked again, timestamped in Bitcoin and published here.
+            </p>
+          </li>
+        </ol>
+      </section>
+
+      <section id="lab" class="sheet" aria-labelledby="lab-title">
+        <h2 id="lab-title" class="title" data-chalk-title>the lab&rsquo;s notebook</h2>
+        <p class="intro">Every idea the models proposed, what it did to the score, and what was kept.</p>
+        <div class="stats" data-stats></div>
+        <div data-adopted></div>
+        <div class="scroll">
+          <table class="log">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Model</th>
+                <th scope="col">Idea</th>
+                <th scope="col">Score</th>
+                <th scope="col">Result</th>
+              </tr>
+            </thead>
+            <tbody data-log></tbody>
+          </table>
+        </div>
+        <p class="note" data-updated></p>
+      </section>
+
+      <section id="verify" class="sheet" aria-labelledby="verify-title">
+        <h2 id="verify-title" class="title" data-chalk-title>check it yourself</h2>
+        <p class="intro">
+          Paste a certificate or drop a file. Your browser runs the same checker that settles the lab&rsquo;s results,
+          compiled to 60 kB of WebAssembly. Nothing leaves your machine.
+        </p>
+        <div class="checker">
+          <textarea data-cert spellcheck="false" aria-label="Certificate text" placeholder="zetema/1 covering 7 3 2&#10;1 2 3&#10;1 4 5&#10;1 6 7&#10;2 4 6&#10;2 5 7&#10;3 4 7&#10;3 5 6"></textarea>
+          <div class="checker-side">
+            <div class="actions">
+              <button type="button" class="primary" data-cert-check>Check</button>
+              <button type="button" class="secondary" data-cert-load>Load record 001</button>
+            </div>
+            <div class="verdict" data-cert-out hidden aria-live="polite"></div>
+            <p class="note">From a terminal, with the code on GitHub:</p>
+            <pre class="cli">cargo run --release -- check records/covering-83-17-2.txt
+ots verify records/covering-83-17-2.txt.ots</pre>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <div class="foot-inner">
+        <a class="lockup" href="/" aria-label="zetema home"><img src="/zeta.svg" alt="" width="22" height="36" /><span>zetema</span></a>
+        <p>An AI lab for open records in mathematics.</p>
+        <nav aria-label="Elsewhere">
+          <a href="https://github.com/zetemamath/zetema" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://x.com/ZetemaMath" target="_blank" rel="noopener">X</a>
+          <a href="mailto:hello@zetema.ai">hello@zetema.ai</a>
+        </nav>
+        <p class="credits">
+          Best known values before zetema from the Covering Repository and the La Jolla Covering Repository tables
+          of Dan Gordon. Typefaces Computer Modern Concrete, Euler and EMS Readability, under the SIL Open Font
+          License.
+        </p>
+      </div>
+    </footer>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

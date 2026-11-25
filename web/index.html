@@ -70,6 +70,18 @@
           83 people, meetings of 17, and every two of them must share a meeting. The best plan since 2011 took 31
           meetings. A search written by AI found one with 30, and a proof shows no plan can use fewer.
         </p>
+        <div class="contract" data-contract hidden>
+          <p class="contract-label"><span class="contract-ticker" data-contract-ticker>$ZETEMA</span> contract on Robinhood Chain</p>
+          <div class="contract-row">
+            <code class="contract-address" data-contract-address></code>
+            <button type="button" class="contract-copy" data-contract-copy>copy</button>
+          </div>
+          <p class="contract-note">
+            The only one: we post it here and on <a href="https://x.com/ZetemaMath" target="_blank" rel="noopener">@ZetemaMath</a>, nowhere
+            else. <a data-contract-explorer target="_blank" rel="noopener">Explorer</a><span data-contract-burn hidden> &middot;
+            <a href="#sponsor">Burn it for search hours</a></span>
+          </p>
+        </div>
         <div class="actions">
           <button type="button" class="primary" data-verify>Check it in your browser</button>
           <a class="secondary" href="#lab">Watch the lab</a>
@@ -112,6 +124,27 @@
           shown. Closing the gap is a new record.
         </p>
         <ul class="near" data-near></ul>
+      </section>
+
+      <section id="sponsor" class="sheet" aria-labelledby="sponsor-title" data-sponsor hidden>
+        <h2 id="sponsor-title" class="title" data-chalk-title>sponsor a search</h2>
+        <p class="intro">
+          Burn tokens to give the lab hours on an open record. Your hours get a core of their own, in the order the
+          burns arrive. If the record falls while your hours run, your wallet goes into the registry next to it.
+        </p>
+        <div class="sponsor-panel">
+          <label>Record <select data-sponsor-entry></select></label>
+          <label>Hours <input type="number" min="1" max="24" value="3" inputmode="numeric" data-sponsor-hours /></label>
+          <span class="cost" data-sponsor-cost></span>
+          <button type="button" class="mini" data-sponsor-go>burn and sponsor</button>
+        </div>
+        <p class="note" data-sponsor-status aria-live="polite"></p>
+        <p class="note">
+          Your wallet signs two transactions on Robinhood Chain: an approve, then the burn. The tokens go to the burn
+          address; the lab never holds them. <a data-sponsor-contract target="_blank" rel="noopener">The contract</a>.
+        </p>
+        <h3 class="minor">Sponsored searches</h3>
+        <ul class="near" data-sponsored></ul>
       </section>
 
       <section id="idea" class="sheet split" aria-labelledby="idea-title">

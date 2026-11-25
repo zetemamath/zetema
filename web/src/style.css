@@ -278,6 +278,97 @@ h1 {
   outline-offset: 3px;
 }
 
+.contract {
+  margin-top: 24px;
+  max-width: 600px;
+}
+
+.contract-label,
+.contract-copy {
+  font-family: "Typewriter", ui-monospace, monospace;
+  font-size: 12px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.contract-label {
+  margin: 0 0 9px;
+  color: var(--dust);
+}
+
+.contract-ticker {
+  margin-right: 6px;
+  color: var(--red-text);
+}
+
+.contract-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 10px 10px 16px;
+  background: rgba(28, 31, 33, 0.62);
+  border-left: 2px solid var(--red);
+  backdrop-filter: blur(2px);
+}
+
+.contract-address {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: "Typewriter", ui-monospace, monospace;
+  font-size: clamp(12.5px, 3.4vw, 17px);
+  line-height: 1.4;
+  color: var(--chalk);
+  text-shadow: 0 0 1.1px rgba(239, 237, 230, 0.45);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.contract-copy {
+  flex: none;
+  min-width: 92px;
+  padding: 10px 12px 9px;
+  line-height: 1;
+  color: var(--chalk);
+  background: transparent;
+  border: 1.5px solid rgba(239, 237, 230, 0.5);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.contract-copy:hover {
+  border-color: var(--chalk);
+}
+
+.contract-copy:focus-visible {
+  outline: 2px solid var(--chalk);
+  outline-offset: 3px;
+}
+
+.contract-copy.done {
+  border-color: var(--red);
+}
+
+.contract-note {
+  margin: 9px 0 0;
+  font-size: 14.5px;
+  line-height: 1.5;
+  color: rgba(239, 237, 230, 0.66);
+  text-wrap: pretty;
+}
+
+.contract-note a {
+  color: var(--chalk);
+  white-space: nowrap;
+}
+
+@media (max-width: 599px) {
+  .contract-copy {
+    flex: 1 1 100%;
+    padding: 13px 12px 12px;
+  }
+}
+
 .verdict {
   margin-top: 18px;
   padding: 14px 18px;
@@ -590,6 +681,74 @@ tbody .math {
 
 .arrow {
   color: var(--red-text);
+}
+
+a.near-step {
+  color: var(--chalk);
+}
+
+.near-left.red {
+  color: var(--red-text);
+}
+
+.near li.empty {
+  font-family: "Typewriter", ui-monospace, monospace;
+  font-size: 13px;
+  color: var(--dust);
+}
+
+.sponsor-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  align-items: end;
+  margin: 28px 0 0;
+  font-family: "Typewriter", ui-monospace, monospace;
+  font-size: 13px;
+}
+
+.sponsor-panel label {
+  display: grid;
+  gap: 6px;
+  color: var(--dust);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.sponsor-panel select,
+.sponsor-panel input {
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--chalk);
+  background: rgba(28, 31, 33, 0.6);
+  border: 1px solid rgba(239, 237, 230, 0.35);
+  border-radius: 2px;
+  padding: 8px 10px;
+  max-width: 100%;
+}
+
+.sponsor-panel input {
+  width: 6em;
+}
+
+.sponsor-panel .cost {
+  color: var(--chalk);
+  padding-bottom: 9px;
+}
+
+.sponsor-panel .mini {
+  padding: 10px 14px 9px;
+}
+
+[data-sponsor-status].bad {
+  color: var(--red-text);
+}
+
+#sponsor .note a {
+  color: var(--chalk);
 }
 
 .split {

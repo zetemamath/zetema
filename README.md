@@ -131,8 +131,18 @@ within a block, blocks ascending, single spaces, one line feed after every line.
 
 ## On chain
 
-Three contracts in [`contracts/`](contracts) are written for Robinhood Chain. Addresses follow at
-deployment.
+Three contracts in [`contracts/`](contracts) run on Robinhood Chain (chain id 4663), next to the
+token they work with:
+
+| Contract | Address |
+| --- | --- |
+| `CoveringRegistry` | [`0x458B00273C022c9F4c84B4b54B5aB7Bf2E285474`](https://robinhoodchain.blockscout.com/address/0x458B00273C022c9F4c84B4b54B5aB7Bf2E285474) |
+| `BountyBoard` | [`0xa7bf93874c233B978A5b22Bb0C2ea3E2E76978dF`](https://robinhoodchain.blockscout.com/address/0xa7bf93874c233B978A5b22Bb0C2ea3E2E76978dF) |
+| `HuntSponsor` | [`0x7E32be9b1093AccFC24066e53da19f9932F27Dc7`](https://robinhoodchain.blockscout.com/address/0x7E32be9b1093AccFC24066e53da19f9932F27Dc7) |
+| $ZETEMA | [`0x0Da0a21C63B576d620c02470e1a2982E5Da2ea1e`](https://robinhoodchain.blockscout.com/token/0x0Da0a21C63B576d620c02470e1a2982E5Da2ea1e) |
+
+In `HuntSponsor` one hour of search burns 100,000 $ZETEMA, at most 24 hours a call. The tokens go
+straight to `0x000000000000000000000000000000000000dEaD`; the contract never holds any.
 
 - `CoveringRegistry` keeps, for each (v, k) with 2 <= k < v <= 255, the (v, k, 2) covering with the
   fewest blocks submitted so far. It checks every submission in full, pair by pair, and takes it

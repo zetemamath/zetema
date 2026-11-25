@@ -6,19 +6,22 @@ import {BountyBoard} from "../src/BountyBoard.sol";
 import {CoveringRegistry} from "../src/CoveringRegistry.sol";
 import {HuntSponsor} from "../src/HuntSponsor.sol";
 import {RECORD_001} from "./Record001.sol";
+import {RECORD_002} from "./Record002.sol";
 
 /// @title Deploy
-/// @notice Deploys the zetema contracts in two steps: first the registry, with record 001 in it; then, once the token
-/// exists, the sponsor and the bounty board for that token.
+/// @notice Deploys the zetema contracts in two steps: first the registry, with records 001 and 002 in it; then, once
+/// the token exists, the sponsor and the bounty board for that token.
 contract Deploy is Script {
-    /// @notice Deploys the registry and submits record 001, C(83,17,2) = 30, right after it in the same broadcast, with
-    /// the broadcasting account as finder and no sponsor. The certificate is already public, so the lab's submission
-    /// has to be the first one.
+    /// @notice Deploys the registry and submits record 001, C(83,17,2) = 30, and record 002, C(58,10,2) = 42, right
+    /// after it in the same broadcast, with the broadcasting account as finder and no sponsor. Record 001's
+    /// certificate is already public, so the lab's submission has to be the first one; record 002's is published only
+    /// once the registry holds it.
     /// @return deployed The registry.
     function registry() external returns (CoveringRegistry deployed) {
         vm.startBroadcast();
         deployed = new CoveringRegistry();
         deployed.submit(83, 17, RECORD_001, address(0));
+        deployed.submit(58, 10, RECORD_002, address(0));
         vm.stopBroadcast();
     }
 

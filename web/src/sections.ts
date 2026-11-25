@@ -3,7 +3,8 @@
 import { Chalk, handwrite } from "./chalk";
 import { check, explain } from "./check";
 import { font, measure } from "./hero";
-import { reduced, type Lab } from "./lab";
+import { reduced, wait, type Lab } from "./lab";
+import { sponsorSearch, tokens } from "./sponsor";
 
 const $ = <T extends Element = HTMLElement>(selector: string, root: ParentNode = document) => root.querySelector<T>(selector)!;
 
@@ -79,6 +80,7 @@ function ledger(lab: Lab): void {
           button,
           el("a", { href: `/${r.certificate}`, download: "", textContent: "blocks" }),
           el("a", { href: `/${r.proof}`, download: "", textContent: "timestamp" }),
+          ...(r.chainTx && lab.chain ? [el("a", { href: `${lab.chain.explorer}/tx/${r.chainTx}`, target: "_blank", rel: "noopener", textContent: "on chain" })] : []),
           result,
         ),
       );
@@ -190,14 +192,125 @@ function checker(lab: Lab): void {
   });
 }
 
+const entry = (name: string) => name.match(/\d+/g)!.map(Number) as [number, number, number];
+const wallet = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+
+/** Who burned for what, and how each search went. */
+function sponsoredList(lab: Lab): void {
+  const jobs = lab.sponsored ?? [];
+  const say = (j: NonNullable<Lab["sponsored"]>[number]) =>
+    j.state === "running" ? `searching, ${j.leftHours} h left${j.open != null ? `, ${j.open} ${j.open === 1 ? "pair" : "pairs"} short of ${j.level}` : ""}`
+      : j.state === "queued" ? "waiting for a free core"
+        : j.state === "done" ? (j.found ? `found ${j.found} ✓` : "hours used, not broken yet")
+          : j.note;
+  $("[data-sponsored]").replaceChildren(
+    ...(jobs.length
+      ? jobs.map((j) =>
+        el(
+          "li",
+          {},
+          el("span", { className: "math", textContent: j.name }),
+          el("a", { href: `${lab.chain?.explorer}/tx/${j.tx}`, target: "_blank", rel: "noopener", className: "near-step", textContent: `${wallet(j.sponsor)} · ${j.hours} h` }),
+          el("span", { className: j.found ? "near-left red" : "near-left", textContent: say(j) }),
+        ))
+      : [el("li", { className: "empty", textContent: "no sponsored search yet" })]),
+  );
+}
+
+/** The burn panel: an open record, hours, and the visitor's wallet signs. Hidden until the contract is live. */
+function sponsorPanel(lab: Lab): void {
+  const c = lab.chain;
+  const section = $("[data-sponsor]");
+  section.hidden = !(c?.sponsor && c.token && c.unit);
+  if (section.hidden || !c?.sponsor) return;
+  const pick = $<HTMLSelectElement>("[data-sponsor-entry]"), hours = $<HTMLInputElement>("[data-sponsor-hours]");
+  const keep = pick.value;
+  const open = new Map<string, string>();
+  for (const h of lab.hunting) open.set(h.name, `${h.name}: ${h.table} → ${h.target}?`);
+  for (const s of lab.live ?? []) if (!open.has(s.name)) open.set(s.name, `${s.name}: ${s.table} → ${s.table - 1}?`);
+  pick.replaceChildren(...[...open].map(([name, label]) => el("option", { value: name, textContent: label })));
+  if (open.has(keep)) pick.value = keep;
+  hours.max = String(c.maxHours ?? 24);
+  const cost = () => {
+    const n = Math.max(1, Math.min(Number(hours.max), Math.floor(Number(hours.value) || 1)));
+    $("[data-sponsor-cost]").textContent = `burns ${tokens(BigInt(c.unit!) * BigInt(n))} $${c.ticker ?? "ZETEMA"}`;
+    return n;
+  };
+  cost();
+  const link = $<HTMLAnchorElement>("[data-sponsor-contract]");
+  link.href = `${c.explorer}/address/${c.sponsor}`;
+  if (section.dataset.wired) return;
+  section.dataset.wired = "1";
+  hours.addEventListener("input", cost);
+  const go = $<HTMLButtonElement>("[data-sponsor-go]"), status = $("[data-sponsor-status]");
+  go.addEventListener("click", async () => {
+    go.disabled = true;
+    status.classList.remove("bad");
+    try {
+      const [v, k, t] = entry(pick.value);
+      const hash = await sponsorSearch(c, v, k, t, cost(), (s) => (status.textContent = s));
+      status.replaceChildren(`burned. The lab picks it up within a minute: `, el("a", { href: `${c.explorer}/tx/${hash}`, target: "_blank", rel: "noopener", textContent: "the transaction" }));
+    } catch (error) {
+      status.textContent = (error as { message?: string }).message ?? String(error);
+      status.classList.add("bad");
+    } finally {
+      go.disabled = false;
+    }
+  });
+}
+
+/** The token's address on the board once it exists. One that shows up while the page is open types itself in. */
+function contract(lab: Lab, live: boolean): void {
+  const c = lab.chain;
+  const box = $("[data-contract]");
+  box.hidden = !c?.token;
+  if (!c?.token) return;
+  const address = $("[data-contract-address]");
+  $("[data-contract-ticker]").textContent = `$${c.ticker ?? "ZETEMA"}`;
+  $<HTMLAnchorElement>("[data-contract-explorer]").href = `${c.explorer}/token/${c.token}`;
+  $("[data-contract-burn]").hidden = !c.sponsor;
+  if (address.dataset.full !== c.token) {
+    const typeIn = live && !address.dataset.full && !reduced;
+    address.dataset.full = c.token;
+    if (typeIn) void (async (text) => {
+      for (let i = 1; i <= text.length && address.dataset.full === text; i++) {
+        address.textContent = text.slice(0, i);
+        await wait(24);
+      }
+    })(c.token);
+    else address.textContent = c.token;
+  }
+  const copy = $<HTMLButtonElement>("[data-contract-copy]");
+  if (copy.dataset.wired) return;
+  copy.dataset.wired = "1";
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(address.dataset.full ?? "");
+      copy.textContent = "copied ✓";
+      copy.classList.add("done");
+      await wait(1600);
+      copy.textContent = "copy";
+      copy.classList.remove("done");
+    } catch {
+      getSelection()?.selectAllChildren(address); // no clipboard here: leave it selected for a manual copy
+    }
+  });
+}
+
 export function renderSections(lab: Lab): void {
+  contract(lab, false);
   ledger(lab);
+  sponsorPanel(lab);
+  sponsoredList(lab);
   notebook(lab);
   checker(lab);
   chalkTitles();
 }
 
 export function refreshSections(lab: Lab): void {
+  contract(lab, true);
   ledger(lab);
+  sponsorPanel(lab);
+  sponsoredList(lab);
   notebook(lab);
 }

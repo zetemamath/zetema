@@ -15,6 +15,34 @@ export interface LabRecord {
   sha256: string;
   certificate: string;
   proof: string;
+  /** The registry transaction that checked and stored it, once it is on chain. */
+  chainTx?: string;
+}
+
+/** A search bought by burning the token: queued, running, done, or skipped with a note. */
+export interface Sponsored {
+  name: string;
+  sponsor: string;
+  hours: number;
+  state: "queued" | "running" | "done" | "skipped" | "failed";
+  tx: string;
+  table: number | null;
+  found: number | null;
+  note: string;
+  leftHours?: number;
+  level?: number;
+  open?: number;
+}
+
+/** The contracts on Robinhood Chain, once deployed. `unit` is the token amount, in wei, one hour burns. */
+export interface Chain {
+  explorer: string;
+  registry: string;
+  sponsor?: string;
+  token?: string;
+  ticker?: string;
+  unit?: string;
+  maxHours?: number;
 }
 
 export interface Idea {
@@ -55,6 +83,8 @@ export interface Lab {
   hunting: { name: string; table: number; target: number; open: number }[];
   /** Searches running right now: the entry, its table value, the level being tried and the sets still open there. */
   live?: { name: string; t: number; table: number; best: number | null; level: number | null; open: number | null; seconds: number }[];
+  sponsored?: Sponsored[];
+  chain?: Chain;
   ideas: Idea[];
   adopted: Adopted[];
   league?: LeagueRow[];
